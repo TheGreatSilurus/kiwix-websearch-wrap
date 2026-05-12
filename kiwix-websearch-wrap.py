@@ -28,7 +28,10 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 
 	query, count = search_request.query, search_request.count
 
-	response = urlopen(KIWIX_URL + '/search?' + urllib.parse.urlencode({'pattern':search_request.query}) + f'&pageLength={count}')
+	try:
+		response = urlopen(KIWIX_URL + '/search?' + urllib.parse.urlencode({'pattern':search_request.query}) + f'&pageLength={count}', timeout = 10)
+	except Exception as e:
+		print(f'Failed to connect to the kiwix server "{KIWIX_URL}"\nError: {e}')
 	html_content = response.read().decode('utf-8')
 
 	results_unparsed = html_content.split('<div class="results">')[1][21:].split('<div class="footer">')[0].split('</li>')[:-1]
