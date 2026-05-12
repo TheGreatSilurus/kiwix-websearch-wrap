@@ -25,9 +25,9 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 		expected_auth_header = f'Bearer {EXPECTED_BEARER_TOKEN}'
 		if authorization != expected_auth_header:
 			raise HTTPException(status_code=401, detail='Unauthorized')
-	
+
 	query, count = search_request.query, search_request.count
-	
+
 	response = urlopen(KIWIX_URL + '/search?' + urllib.parse.urlencode({'pattern':search_request.query}) + f'&pageLength={count}')
 	html_content = response.read().decode('utf-8')
 
