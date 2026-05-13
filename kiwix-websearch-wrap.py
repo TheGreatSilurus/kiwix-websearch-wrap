@@ -40,14 +40,14 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 	results_unparsed = html_content.split('<div class="results">')[1][21:].split('<div class="footer">')[0].split('</li>')[:-1]
 
 	if len(results_unparsed) == 0:
-		print('No results found')
+		logging.info('No results found')
 		return []
 
 	results = []
 	for result in results_unparsed[:search_request.count]:
 		href = KIWIX_URL + result[result.find('<a href="') + 9 : result.find('">')]
 		name = result[result.find('">') + 3 : result.find('</a>') - 1].strip()
-		body = result[result.find('<cite>') + 6 : result.find('</cite>') - 1]
+		body = result[result.find('<cite>') + 9 : result.find('</cite>') - 6].replace('<b>', '').replace('</b>', '')
 		results.append(
 			SearchResult(
 				link = href,
@@ -55,7 +55,7 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 				snippet = body,
 			)
 		)
-	print(f'Found {len(results)} results')
+	logging.info(f'Found {len(results)} results')
 	return results
 
 if __name__ == '__main__':
