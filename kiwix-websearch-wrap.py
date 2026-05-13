@@ -23,6 +23,8 @@ class SearchResult(BaseModel):
 
 @app.post('/search')
 async def external_search(search_request: SearchRequest = Body(...), authorization: str | None = Header(None)):
+	logger = logging.getLogger(__name__)
+
 	if EXPECTED_BEARER_TOKEN != '':
 		expected_auth_header = f'Bearer {EXPECTED_BEARER_TOKEN}'
 		if authorization != expected_auth_header:
@@ -33,14 +35,14 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 	try:
 		response = urlopen(KIWIX_URL + '/search?' + urllib.parse.urlencode({'pattern':search_request.query}) + f'&pageLength={count}', timeout = 10)
 	except URLError as e:
-		logging.error(f'Failed to connect to the kiwix server "{KIWIX_URL}" {e}')
+		logger.error(f'Failed to connect to the kiwix server "{KIWIX_URL}" {e}')
 		return []
 	html_content = response.read().decode('utf-8')
 
 	results_unparsed = html_content.split('<div class="results">')[1][21:].split('<div class="footer">')[0].split('</li>')[:-1]
 
 	if len(results_unparsed) == 0:
-		logging.info('No results found')
+		logger.info('No results found')
 		return []
 
 	results = []
@@ -55,7 +57,7 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 				snippet = body,
 			)
 		)
-	logging.info(f'Found {len(results)} results')
+	logger.info(f'Found {len(results)} results')
 	return results
 
 if __name__ == '__main__':
@@ -64,8 +66,14 @@ if __name__ == '__main__':
 	parser.add_argument('-u', '--url', default = KIWIX_URL, help = f'Adress of the kiwix server [default: {KIWIX_URL}]')
 	parser.add_argument('-t', '--token', default = EXPECTED_BEARER_TOKEN, help = 'Expected bearer token [optional]')
 	parser.add_argument('-a', '--adress', default = '0.0.0.0', help = 'Adress to listen on [default: 0.0.0.0]')
+	parser.add_argument('-v', '--verbose', action='store_true', help = 'Extra logging [optional]')
 
 	args = parser.parse_args()
+
+	logging.basicConfig()
+	if args.verbose:
+		logger = logging.getLogger(__name__)
+		logger.setLevel(logging.INFO)
 
 	KIWIX_URL = args.url
 	EXPECTED_BEARER_TOKEN = args.token
