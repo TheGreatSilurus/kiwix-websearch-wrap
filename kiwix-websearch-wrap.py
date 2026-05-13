@@ -36,7 +36,6 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 		logging.error(f'Failed to connect to the kiwix server "{KIWIX_URL}" {e}')
 		return []
 	html_content = response.read().decode('utf-8')
-
 	results_unparsed = html_content.split('<div class="results">')[1][21:].split('<div class="footer">')[0].split('</li>')[:-1]
 
 	if len(results_unparsed) == 0:
@@ -57,6 +56,36 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 		)
 	logging.info(f'Found {len(results)} results')
 	return results
+
+class LoadRequest(BaseModel):
+	url: str
+
+class LoadResult(BaseModel):
+	page_content: str
+	metadata: str | None
+
+@app.post("/load")
+async def external_load(load_request: LoadRequest = Body(...), authorization: str | None = Header(None)):
+	if EXPECTED_BEARER_TOKEN != '':
+		expected_auth_header = f'Bearer {EXPECTED_BEARER_TOKEN}'
+		if authorization != expected_auth_header:
+			raise HTTPException(status_code=401, detail="Unauthorized")
+
+	url = load_request.url
+
+	try:
+		response = urlopen(url, timeout = 10)
+	except URLError as e:
+		logging.error(f'Failed to connect to the kiwix server "{url}" {e}')
+		return []
+
+	html_content = response.read().decode('utf-8')
+	page = html_content.split('<body')[1]
+
+	return LoadResult(
+			page_content = page,
+			metadata = None
+		)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
