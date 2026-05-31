@@ -63,9 +63,9 @@ async def external_search(search_request: SearchRequest = Body(...), authorizati
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-p', '--port', type = int, default = 8008, help = 'Port to open  [default: 8008]')
-	parser.add_argument('-u', '--url', default = KIWIX_URL, help = f'Adress of the kiwix server [default: {KIWIX_URL}]')
+	parser.add_argument('-u', '--url', default = KIWIX_URL, help = f'Address of the kiwix server [default: {KIWIX_URL}]')
 	parser.add_argument('-t', '--token', default = EXPECTED_BEARER_TOKEN, help = 'Expected bearer token [optional]')
-	parser.add_argument('-a', '--adress', default = '0.0.0.0', help = 'Adress to listen on [default: 0.0.0.0]')
+	parser.add_argument('-a', '--address', default = '0.0.0.0', help = 'Address to listen on [default: 0.0.0.0]')
 	parser.add_argument('-v', '--verbose', action='store_true', help = 'Extra logging [optional]')
 
 	args = parser.parse_args()
@@ -78,4 +78,4 @@ if __name__ == '__main__':
 	KIWIX_URL = args.url
 	EXPECTED_BEARER_TOKEN = args.token
 
-	uvicorn.run(app, host=args.adress, port=args.port)
+	uvicorn.run(app, host=args.address, port=args.port)
